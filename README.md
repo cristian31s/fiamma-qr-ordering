@@ -6,6 +6,13 @@ Demo pentru restaurante: fiecare masă are propriul cod QR. Clientul scanează c
 
 > Plățile sunt simulate. Ilustrațiile cu pizza sunt desene SVG și țin locul fotografiilor de produs.
 
+## Variante de design
+
+- `/`: varianta originală, italiană modernă (crem, roșu roșiatic, serif).
+- `/apple/`: varianta în stil Apple. Clientul are interfață de iOS: titluri mari, liste grupate, control segmentat, foi glisante, notificări ca pe iPhone. Ospătarul are interfață de macOS, cu bară de unelte translucidă. Trece automat pe light sau dark după setarea dispozitivului.
+
+Ambele variante folosesc același backend Supabase, deci comenzile se văd în oricare dintre ele.
+
 ## Ecrane
 
 | Adresă | Pentru cine | Ce face |

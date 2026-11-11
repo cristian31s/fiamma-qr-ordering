@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fiamma · demo comandă la masă (stil Apple)</title>
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* =========================================================
+   Fiamma — varianta „Apple”: iOS pe telefon, macOS pe ecranul ospătarului
+   Font de sistem (SF Pro pe Apple), materiale translucide, liste grupate,
+   colțuri continue, light / dark automat.
+   ========================================================= */
+:root{
+  --bg:#F2F2F7; --bg2:#FFFFFF; --bg3:#F2F2F7; --elev:#FFFFFF;
+  --label:#000000; --label2:rgba(60,60,67,.60); --label3:rgba(60,60,67,.30);
+  --sep:rgba(60,60,67,.16); --fill:rgba(120,120,128,.12); --fill2:rgba(120,120,128,.20);
+  --material:rgba(249,249,249,.78); --material-strong:rgba(255,255,255,.86); --seg-on:#FFFFFF;
+  --accent:#FF3B30; --accent-d:#D70015; --accent-tint:rgba(255,59,48,.12);
+  --blue:#007AFF; --green:#34C759; --orange:#FF9500; --yellow:#FFCC00; --indigo:#5856D6;
+  /* aliasuri folosite de cod */
+  --ink:var(--label); --muted:var(--label2); --line:var(--sep); --cream:var(--bg); --paper:var(--bg2);
+  --tomato:var(--accent); --tomato-d:var(--accent-d); --gold:var(--orange); --warn:var(--orange); --ok:var(--green); --basil:var(--green); --olive:var(--green);
+  --r:14px; --r-lg:22px;
+  --shadow:0 8px 30px rgba(0,0,0,.12);
+  --sans:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --serif:-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#000000; --bg2:#1C1C1E; --bg3:#2C2C2E; --elev:#2C2C2E;
+    --label:#FFFFFF; --label2:rgba(235,235,245,.60); --label3:rgba(235,235,245,.30);
+    --sep:rgba(84,84,88,.55); --fill:rgba(120,120,128,.24); --fill2:rgba(120,120,128,.32);
+    --material:rgba(30,30,30,.72); --material-strong:rgba(28,28,30,.86); --seg-on:#636366;
+    --accent:#FF453A; --accent-d:#FF6961; --accent-tint:rgba(255,69,58,.18);
+    --blue:#0A84FF; --green:#30D158; --orange:#FF9F0A; --yellow:#FFD60A;
+    --shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--label);font-family:var(--sans);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,select,textarea{font:inherit;color:var(--label)}
+a{color:var(--blue)}
+.hidden{display:none!important}
+.serif{font-family:var(--serif)}
+.demo-badge{position:fixed;bottom:14px;left:14px;background:var(--material);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);color:var(--label2);font-size:11px;font-weight:600;padding:6px 12px;border-radius:99px;z-index:90;pointer-events:none;border:.5px solid var(--sep)}
+.small{font-size:13px;color:var(--label2);line-height:1.45}
+code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.92em;background:var(--fill);padding:1px 5px;border-radius:5px}
+
+/* app icon */
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:44px;height:44px;border-radius:24%;background:linear-gradient(160deg,#FF6B4A 0%,#FF3B30 45%,#C9251A 100%);display:grid;place-items:center;color:#fff;font-family:var(--serif);font-size:24px;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(201,37,26,.35);letter-spacing:-.03em}
+.brand-name{font-family:var(--serif);font-size:22px;font-weight:700;letter-spacing:-.025em}
+.brand-sub{font-size:12px;color:var(--label2);font-weight:500}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border-radius:980px;font-weight:600;font-size:16px;transition:transform .15s, opacity .15s, background .2s;letter-spacing:-.015em}
+.btn:active{transform:scale(.97);opacity:.85}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.05)}
+.btn-dark{background:var(--label);color:var(--bg2)}
+.btn-ghost{background:var(--fill);color:var(--blue)}
+.btn-block{width:100%;border-radius:14px}
+
+/* ---------- HOME (pagină de produs) ---------- */
+.home{max-width:1080px;margin:0 auto;padding:22px 24px 90px}
+.home > .brand{justify-content:center;padding:6px 0 0}
+.home > .brand .brand-mark{width:30px;height:30px;font-size:16px;border-radius:24%}
+.home > .brand .brand-name{font-size:17px;font-weight:600}
+.home > .brand .brand-sub{display:none}
+.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:40px;align-items:center;margin-top:56px}
+.hero h1{font-family:var(--serif);font-size:clamp(40px,6vw,72px);line-height:1.04;margin:0 0 20px;letter-spacing:-.045em;font-weight:700}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#FF9500,#FF3B30 55%,#AF52DE);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{font-size:19px;line-height:1.5;color:var(--label2);max-width:540px;letter-spacing:-.02em}
+.hero-art svg{width:100%;height:auto;filter:drop-shadow(0 40px 50px rgba(0,0,0,.22))}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:72px}
+.step{background:var(--bg2);border-radius:var(--r-lg);padding:26px}
+.step .n{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.02em}
+.step h3{margin:8px 0 8px;font-size:21px;letter-spacing:-.03em}
+.step p{margin:0;color:var(--label2);font-size:15px;line-height:1.5}
+.demo-qr{display:flex;gap:20px;align-items:center;background:var(--bg2);border-radius:var(--r-lg);padding:18px;margin-top:30px;max-width:540px}
+.demo-qr .qr{width:112px;height:112px;flex:none;background:#fff;border-radius:12px;padding:6px}
+.demo-qr .qr img,.demo-qr .qr canvas{width:100px!important;height:100px!important}
+
+/* ---------- CLIENT (iOS) ---------- */
+.client{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:160px}
+.c-top{position:sticky;top:0;z-index:20;background:var(--material);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep);padding:10px 16px 0}
+.c-top-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px}
+.c-top .brand-mark{border-radius:24%!important}
+.c-top .brand-name{font-size:17px!important;font-weight:600}
+.table-chip{background:var(--fill);color:var(--label);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.bell{display:flex;align-items:center;gap:6px;background:var(--accent-tint);color:var(--accent);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:600}
+.bell svg{width:15px;height:15px}
+.bell.active{background:var(--orange);color:#fff}
+/* segmented control */
+.cats{display:flex;gap:2px;overflow-x:auto;margin:10px 0 10px;padding:2px;background:var(--fill);border-radius:10px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:1 0 auto;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--label);transition:background .2s, box-shadow .2s}
+.cat.on{background:var(--seg-on);box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);font-weight:600}
+/* large title */
+.c-hero{padding:18px 20px 4px}
+.c-hero h2{font-family:var(--serif);font-size:34px;margin:0;font-weight:700;letter-spacing:-.035em}
+.c-hero p{margin:4px 0 0;color:var(--label2);font-size:15px}
+/* grouped list header */
+.section-title{font-family:var(--sans);font-size:22px;font-weight:700;letter-spacing:-.03em;margin:26px 20px 8px;display:flex;flex-direction:column;gap:2px}
+.section-title small{font-size:13px;color:var(--label2);font-weight:400;letter-spacing:-.01em}
+/* inset grouped list */
+.items{margin:0 16px;background:var(--bg2);border-radius:var(--r-lg);overflow:hidden}
+.item{display:grid;grid-template-columns:84px 1fr;gap:14px;padding:12px 14px;align-items:center;text-align:left;width:100%;position:relative;transition:background .15s}
+.item + .item::before{content:"";position:absolute;top:0;left:112px;right:0;border-top:.5px solid var(--sep)}
+.item:active{background:var(--fill)}
+.thumb{width:84px;height:84px;border-radius:18px;background:var(--bg3);display:grid;place-items:center;position:relative;overflow:hidden}
+.thumb svg{width:94%;height:94%}
+.thumb.drink svg{width:68%;height:68%}
+.item h4{margin:0 0 3px;font-size:17px;font-weight:600;letter-spacing:-.025em}
+.item .desc{font-size:13px;color:var(--label2);line-height:1.38;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .meta{display:flex;align-items:center;justify-content:space-between;margin-top:7px}
+.price{font-weight:600;font-size:15px}
+.weight{font-size:13px;color:var(--label2);margin-left:6px;font-weight:400}
+.add{width:30px;height:30px;border-radius:50%;background:var(--accent-tint);color:var(--accent);display:grid;place-items:center;font-size:21px;font-weight:500;line-height:1}
+.qty-badge{position:absolute;top:5px;right:5px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;border-radius:99px;min-width:21px;height:21px;display:grid;place-items:center;padding:0 6px;box-shadow:0 0 0 2px var(--bg3)}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;margin-left:6px;vertical-align:2px;letter-spacing:0}
+.tag.veg{background:rgba(52,199,89,.15);color:var(--green)}
+.tag.hot{background:var(--accent-tint);color:var(--accent)}
+.tag.bianca{background:var(--fill);color:var(--label2)}
+
+.cartbar{position:fixed;left:50%;transform:translateX(-50%);bottom:94px;width:min(488px,calc(100% - 32px));background:var(--accent);color:#fff;border-radius:16px;padding:15px 18px;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:16px;box-shadow:0 6px 18px rgba(255,59,48,.25);z-index:30;animation:up .35s cubic-bezier(.2,.9,.3,1.2)}
+.cartbar .count{background:rgba(255,255,255,.25);border-radius:99px;padding:2px 9px;margin-right:8px;font-size:14px}
+/* tab bar */
+.tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(520px,100%);background:var(--material);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);display:grid;grid-template-columns:repeat(3,1fr);padding:6px 8px calc(8px + env(safe-area-inset-bottom));z-index:31}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:500;color:var(--label2);padding:4px;position:relative;letter-spacing:.01em}
+.tab svg{width:25px;height:25px;stroke-width:1.8}
+.tab.on{color:var(--accent)}
+.tab.on svg{stroke-width:2.2}
+.tab .dot{position:absolute;top:0;left:calc(50% + 6px);background:var(--accent);color:#fff;font-size:11px;font-weight:600;min-width:18px;height:18px;border-radius:99px;display:grid;place-items:center;padding:0 5px}
+
+.panel{padding:6px 16px}
+.card{background:var(--bg2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.line-item{display:flex;justify-content:space-between;gap:12px;padding:11px 0;font-size:15px;border-bottom:.5px solid var(--sep)}
+.line-item:last-child{border-bottom:0}
+.line-item .note{display:block;font-size:13px;color:var(--label2)}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px}
+.status::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.st-nou{background:rgba(255,149,0,.15);color:var(--orange)}
+.st-prep{background:rgba(0,122,255,.13);color:var(--blue)}
+.st-servit{background:rgba(52,199,89,.15);color:var(--green)}
+.total-row{display:flex;justify-content:space-between;font-size:17px;font-weight:700;padding-top:12px;letter-spacing:-.02em}
+.empty{text-align:center;color:var(--label2);padding:56px 20px}
+.empty svg{width:110px;height:110px;opacity:.9}
+.empty h3{font-family:var(--sans)!important;font-size:20px!important;letter-spacing:-.025em}
+
+/* sheet (iOS) */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.32);z-index:60;display:flex;align-items:flex-end;justify-content:center;animation:fade .25s}
+.sheet{background:var(--bg);width:min(520px,100%);max-height:92vh;overflow:auto;border-radius:12px 12px 0 0;padding:6px 16px calc(24px + env(safe-area-inset-bottom));animation:up .4s cubic-bezier(.2,.9,.25,1);box-shadow:0 -10px 40px rgba(0,0,0,.18)}
+@media (min-width:700px){.overlay{align-items:center}.sheet{border-radius:16px;max-height:86vh;padding-bottom:22px}}
+.grab{width:36px;height:5px;border-radius:9px;background:var(--fill2);margin:2px auto 12px}
+.sheet h3{font-family:var(--serif);font-size:24px;margin:2px 0 4px;font-weight:700;letter-spacing:-.03em}
+.sheet .big-art{display:grid;place-items:center;background:var(--bg2);border-radius:var(--r-lg);padding:20px;margin-bottom:16px}
+.sheet .big-art svg{width:min(250px,70%);height:auto}
+.sheet .card{margin-top:12px}
+/* iOS stepper */
+.stepper{display:flex;align-items:center;background:var(--fill);border-radius:9px;overflow:hidden}
+.stepper button{width:44px;height:32px;font-size:20px;font-weight:400;color:var(--label)}
+.stepper button:first-child{border-right:.5px solid var(--sep)}
+.stepper button:last-child{border-left:.5px solid var(--sep)}
+.stepper span{min-width:34px;text-align:center;font-weight:600;font-size:15px}
+textarea.note-in,input.txt{width:100%;border:0;border-radius:12px;padding:12px 14px;background:var(--bg2);resize:none;outline:none;font-size:16px}
+textarea.note-in:focus,input.txt:focus{box-shadow:0 0 0 3px rgba(0,122,255,.3)}
+/* segmented tips */
+.chips{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;background:var(--fill);border-radius:10px;padding:2px}
+.chip{padding:7px 4px;border-radius:8px;font-weight:600;font-size:14px;text-align:center}
+.chip .small{font-size:11px}
+.chip.on{background:var(--seg-on);box-shadow:0 3px 8px rgba(0,0,0,.12)}
+/* list rows with chevron */
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;background:var(--bg2);font-weight:500;font-size:16px;position:relative}
+.opt:first-of-type{border-radius:var(--r) var(--r) 0 0}
+.opt:last-of-type{border-radius:0 0 var(--r) var(--r);margin-bottom:12px}
+.opt:only-of-type{border-radius:var(--r)}
+.opt + .opt::before{content:"";position:absolute;top:0;left:62px;right:0;border-top:.5px solid var(--sep)}
+.opt::after{content:"";width:8px;height:8px;border-right:2px solid var(--label3);border-top:2px solid var(--label3);transform:rotate(45deg);margin-left:auto;flex:none}
+.opt:active{background:var(--fill)}
+.opt .ic{width:34px;height:34px;border-radius:9px;background:var(--fill);display:grid;place-items:center;flex:none;font-size:17px}
+.opt small{display:block;font-weight:400;color:var(--label2);font-size:13px;margin-top:1px}
+.pay-btn{width:100%;height:50px;border-radius:12px;font-weight:600;font-size:18px;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;letter-spacing:-.01em}
+.pay-apple{background:#000;color:#fff}
+@media (prefers-color-scheme:dark){.pay-apple{background:#fff;color:#000}}
+.pay-google{background:#fff;color:#3c4043;border:1px solid #dadce0}
+.pay-card{background:var(--fill);color:var(--label);font-size:16px}
+.card-form{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:12px 0;background:var(--sep);border-radius:var(--r);overflow:hidden}
+.card-form input{border:0;padding:13px 14px;background:var(--bg2);color:var(--label2);outline:none}
+.card-form .full{grid-column:1/-1}
+/* activity indicator */
+.spinner{width:36px;height:36px;margin:34px auto 14px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 10%,var(--label2) 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 4px));animation:spin .8s linear infinite}
+.success{text-align:center;padding:14px 0}
+.success h3{margin-top:4px}
+.success .check{width:72px;height:72px;border-radius:50%;background:var(--green);display:grid;place-items:center;margin:12px auto 14px;animation:pop .5s cubic-bezier(.2,.9,.3,1.4)}
+.banner{margin:12px 16px 0;padding:12px 14px;border-radius:var(--r);font-size:14px;font-weight:500;display:flex;gap:10px;align-items:center;background:var(--bg2)}
+.banner.gold{color:var(--orange)}
+.banner.ok{color:var(--green)}
+.banner.blue{color:var(--blue)}
+/* notification banner (toast) */
+.toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);width:min(420px,calc(100% - 24px));background:var(--material-strong);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);color:var(--label);padding:12px 14px;border-radius:20px;font-weight:600;font-size:15px;z-index:95;box-shadow:0 10px 40px rgba(0,0,0,.2);display:flex;align-items:center;gap:12px;animation:drop .45s cubic-bezier(.2,.9,.3,1.2)}
+.toast .ti{width:36px;height:36px;border-radius:24%;background:linear-gradient(160deg,#FF6B4A,#FF3B30 45%,#C9251A);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
+.toast small{display:block;font-weight:400;color:var(--label2);font-size:13px}
+
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(60px);opacity:0}}
+@keyframes drop{from{transform:translate(-50%,-30px);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--pc)}50%{box-shadow:0 0 0 7px transparent}}
+
+/* ---------- STAFF (macOS) ---------- */
+.staff{min-height:100vh;background:var(--bg)}
+.s-top{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 20px 10px 88px;background:var(--material);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep);flex-wrap:wrap}
+.s-top::before{content:"";position:absolute;left:20px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:#FF5F57;box-shadow:20px 0 0 #FEBC2E,40px 0 0 #28C840}
+.s-top .brand-mark{border-radius:24%!important}
+.s-top .brand-name{font-size:15px;font-weight:600}
+.s-top .brand-sub{color:var(--label2);font-size:12px}
+.live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--label2);font-weight:500;background:var(--fill);padding:5px 10px;border-radius:99px}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.live.off i{background:var(--orange)}
+.s-actions{display:flex;gap:6px;flex-wrap:wrap}
+.s-btn{background:var(--fill);color:var(--label);padding:6px 12px;border-radius:7px;font-size:13px;font-weight:500}
+.s-btn:hover{background:var(--fill2)}
+.s-btn.on{background:var(--blue);color:#fff}
+.s-body{display:grid;grid-template-columns:1fr 390px;gap:24px;padding:24px}
+.s-h{font-family:var(--sans);font-size:22px;margin:0 0 12px;font-weight:700;letter-spacing:-.03em;display:flex;align-items:center;gap:8px}
+.tables{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.tbl{--pc:transparent;background:var(--bg2);border-radius:18px;padding:14px 16px;text-align:left;min-height:120px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .2s cubic-bezier(.2,.9,.3,1.3), box-shadow .2s;box-shadow:0 1px 2px rgba(0,0,0,.05);position:relative;overflow:hidden}
+.tbl::after{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--sc,transparent)}
+.tbl:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.tbl .num{font-family:var(--serif);font-size:34px;font-weight:700;line-height:1;letter-spacing:-.04em}
+.tbl .lbl{font-size:13px;font-weight:600;margin-top:8px;color:var(--sc,var(--label2))}
+.tbl .amt{font-size:13px;color:var(--label2)}
+.tbl.s-free{opacity:.6}
+.tbl.s-busy{--sc:var(--label2)}
+.tbl.s-new{--sc:var(--orange)}
+.tbl.s-call{--sc:var(--orange);--pc:rgba(255,149,0,.45);animation:pulse 1.6s infinite}
+.tbl.s-bill{--sc:var(--blue);--pc:rgba(0,122,255,.4);animation:pulse 1.6s infinite}
+.tbl.s-paid{--sc:var(--green)}
+.tbl.sel{box-shadow:0 0 0 3px var(--blue)}
+.feed{display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 140px);overflow:auto;padding:2px}
+.ev{background:var(--bg2);border-radius:16px;padding:14px 16px;position:relative}
+.ev::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:var(--ec,var(--sep))}
+.ev.k-order{--ec:var(--orange)}
+.ev.k-call{--ec:var(--yellow)}
+.ev.k-bill{--ec:var(--blue)}
+.ev.k-pay{--ec:var(--green)}
+.ev.done{opacity:.5}
+.ev-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--label2)}
+.ev-h b{color:var(--label);font-size:15px;font-weight:600}
+.ev ul{margin:8px 0 0;padding:0;list-style:none;font-size:14px}
+.ev li{padding:3px 0}
+.ev li .note{color:var(--accent);font-size:12px}
+.ev-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.mini{padding:6px 12px;border-radius:7px;font-size:13px;font-weight:500;background:var(--fill);color:var(--label)}
+.mini:hover{background:var(--fill2)}
+.mini.primary{background:var(--blue);color:#fff}
+.mini.ok{background:var(--green);color:#fff}
+.detail{background:var(--bg2);border-radius:var(--r-lg);padding:18px 20px;margin-top:20px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--label2);margin:-4px 0 14px}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:0;background:var(--c)}
+
+/* ---------- QR ADMIN ---------- */
+.admin{max-width:1100px;margin:0 auto;padding:32px 24px 80px}
+.admin .s-actions .btn{padding:8px 16px;font-size:14px}
+.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:20px}
+.tent{background:var(--bg2);border-radius:var(--r-lg);padding:24px 18px 20px;text-align:center}
+.tent .qr{width:156px;height:156px;margin:14px auto;background:#fff;border-radius:14px;padding:3px}
+.tent .qr img,.tent .qr canvas{width:150px!important;height:150px!important}
+.tent .tn{font-family:var(--serif);font-size:44px;font-weight:700;line-height:1;letter-spacing:-.04em}
+.tent .tl{font-size:13px;color:var(--label2);font-weight:500}
+.tent a{color:var(--blue)!important;text-decoration:none}
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;text-align:center}
+  .hero p{margin-left:auto;margin-right:auto}
+  .cta-row{justify-content:center}
+  .demo-qr{margin-left:auto;margin-right:auto;text-align:left}
+  .hero-art{max-width:340px;margin:0 auto;grid-row:1}
+  .steps{grid-template-columns:1fr}
+  .s-body{grid-template-columns:1fr}
+  .feed{max-height:none}
+  .s-top{padding-left:20px}.s-top::before{display:none}
+}
+</style>
+</head>
+<body>
+<div class="demo-badge" id="badge">Demo · plăți simulate</div>
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   Fiamma — demo comandă & plată la masă prin QR
+   ========================================================= */
+const TABLES = 12;
+const LS_KEY = "fiamma-events-v1";
+const LS_BASE = "fiamma-base-url";
+const ARTIFACT_URL = "https://claude.ai/artifact/9qspGUkqiiys7yG4ncHJvp";
+// pe domeniul propriu (GitHub Pages, Cloudflare Pages) codurile QR duc la adresa curentă
+const DEFAULT_BASE = (location.protocol.startsWith("http") && !/claude/i.test(location.hostname)) ? location.href.split("#")[0] : ARTIFACT_URL;
+
+/* ---------- seeded RNG ---------- */
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+
+/* ---------- PIZZA ILLUSTRATIONS ---------- */
+function scatter(r, n, maxR, minDist, filter){
+  const pts=[];let tries=0;
+  while(pts.length<n && tries<n*60){
+    tries++;
+    const a=r()*Math.PI*2, d=Math.sqrt(r())*maxR;
+    const x=100+Math.cos(a)*d, y=100+Math.sin(a)*d;
+    if(filter && !filter(x,y)) continue;
+    if(pts.every(p=>Math.hypot(p.x-x,p.y-y)>=minDist)) pts.push({x,y,rot:r()*360,s:.85+r()*.3});
+  }
+  return pts;
+}
+const T = {
+  mozz:(p,r)=>{ // fior di latte blob
+    const k=8+r()*5; let d="";
+    for(let i=0;i<9;i++){const a=i/9*Math.PI*2, rr=k*(.8+r()*.35);d+=(i?"L":"M")+(Math.cos(a)*rr).toFixed(1)+","+(Math.sin(a)*rr).toFixed(1)}
+    return `<g transform="translate(${p.x} ${p.y})"><path d="${d}Z" fill="#FFF4DC" stroke="#F0DDB4" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="${-2+r()*4}" cy="${-2+r()*4}" rx="${k*.35}" ry="${k*.22}" fill="#E9B868" opacity=".45"/></g>`},
+  yellow:(p,r)=>{const k=7+r()*5;return `<g transform="translate(${p.x} ${p.y}) rotate(${p.rot})"><ellipse rx="${k}" ry="${k*.7}" fill="#F6D57E" stroke="#E7BA55" stroke-width="1.2"/><ellipse rx="${k*.4}" ry="${k*.25}" cx="2" fill="#E3A447" opacity=".5"/></g>`},
+  gorgo:(p,r)=>{const k=7+r()*4;return `<g transform="translate(${p.x} ${p.y}) rotate(${p.rot})"><path d="M${-k},0 Q${-k*.6},${-k} 0,${-k*.8} Q${k},${-k*.6} ${k},0 Q${k*.7},${k} 0,${k*.8} Q${-k*.8},${k*.7} ${-k},0Z" fill="#EEE9D8" stroke="#D6CFB8"/><path d="M${-k*.6},${-1} q3,-3 6,0 t5,1" stroke="#5F86A0" stroke-width="1.6" fill="none"/><path d="M${-2},${k*.4} q2,-2 5,0" stroke="#4F7690" stroke-width="1.4" fill="none"/><circle cx="${k*.4}" cy="${-k*.35}" r="1.4" fill="#5F86A0"/></g>`},
+  parm:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.s})"><path d="M-9,-2 L6,-5 L10,1 L-6,4Z" fill="#F4E3A6" stroke="#DCC57A" stroke-width=".8"/></g>`,
+  basil:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.s*1.1})"><path d="M0,-10 C7,-7 7,6 0,11 C-7,6 -7,-7 0,-10Z" fill="#2F7A36"/><path d="M0,-8 L0,9" stroke="#5FA35B" stroke-width="1"/><path d="M0,-8 C4,-5 4,5 0,9" fill="#3E8E40" opacity=".5"/></g>`,
+  ham:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.s})"><path d="M-10,-6 Q-2,-9 9,-6 Q12,0 9,6 Q0,9 -10,6 Q-12,0 -10,-6Z" fill="#EBA6A2" stroke="#CF7E7A" stroke-width="1.2"/><path d="M-6,-2 Q0,-4 6,-1" stroke="#F7CFCB" stroke-width="2" fill="none"/></g>`,
+  mush:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.s})"><path d="M-9,1 C-9,-8 9,-8 9,1 L3.5,1 L3.5,8 Q0,9.5 -3.5,8 L-3.5,1Z" fill="#D7BD94" stroke="#8C6B45" stroke-width="1.3" stroke-linejoin="round"/><path d="M-6,-1 C-5,-5 5,-5 6,-1" stroke="#A9875E" fill="none" stroke-width="1"/></g>`,
+  olive:(p,r)=>`<g transform="translate(${p.x} ${p.y})"><circle r="4.4" fill="none" stroke="#211D1B" stroke-width="3"/><circle r="4.4" fill="none" stroke="#4a403a" stroke-width=".6" transform="translate(-.6 -.6)"/></g>`,
+  artich:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.s})"><path d="M0,-11 C8,-6 8,6 0,10 C-8,6 -8,-6 0,-11Z" fill="#9AAE62" stroke="#6E8340" stroke-width="1.2"/><path d="M0,-8 C4,-4 4,4 0,7 M0,-8 C-4,-4 -4,4 0,7" stroke="#6E8340" fill="none" stroke-width="1"/><path d="M-3,6 Q0,9 3,6" fill="#C8B67A"/></g>`,
+  salami:(p,r)=>{let dots="";for(let i=0;i<7;i++){const a=r()*6.28,d=r()*7;dots+=`<circle cx="${(Math.cos(a)*d).toFixed(1)}" cy="${(Math.sin(a)*d).toFixed(1)}" r="${(.9+r()*1.1).toFixed(1)}" fill="#EDBBA8"/>`}
+    return `<g transform="translate(${p.x} ${p.y})"><circle r="10.5" fill="#7D1F18"/><circle r="9" fill="#B2362B"/>${dots}<path d="M-6,-6 A9,9 0 0 1 6,-6" stroke="#5f150f" stroke-width="1.3" fill="none" opacity=".5"/></g>`},
+  chili:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot})"><path d="M-2,-1 L2,-2 L1.5,1.5 L-1.5,1.2Z" fill="#D43A1F"/></g>`,
+  rucola:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.s})"><path d="M0,-13 L3,-9 L7,-8 L4,-4 L8,-1 L4,1 L6,6 L1,5 L0,12 L-1,5 L-6,6 L-4,1 L-8,-1 L-4,-4 L-7,-8 L-3,-9Z" fill="#4E8B2E" stroke="#346B1B" stroke-width=".8" stroke-linejoin="round"/><path d="M0,-11 L0,11" stroke="#7DB055" stroke-width=".9"/></g>`,
+  crudo:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.s})"><path d="M-15,-3 C-10,-10 -4,2 1,-5 C6,-11 10,0 15,-5 L15,4 C10,9 6,-2 1,4 C-4,10 -10,-2 -15,5Z" fill="#D9868A" stroke="#B9646A" stroke-width="1"/><path d="M-15,3 C-10,-3 -4,8 1,2 C6,-4 10,7 15,2" stroke="#F6DCD6" stroke-width="2" fill="none"/></g>`,
+  tuna:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.s})"><path d="M-7,-3 L-2,-6 L5,-4 L8,1 L3,5 L-4,5 L-8,1Z" fill="#CDB79C" stroke="#A28C71" stroke-width="1"/><path d="M-4,-1 L3,0 M-3,2 L4,2" stroke="#B49E83" stroke-width=".9"/></g>`,
+  onion:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot})"><path d="M-9,4 A10,10 0 0 1 9,4" stroke="#8B3A78" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M-9,4 A10,10 0 0 1 9,4" stroke="#E7C7DE" stroke-width=".8" fill="none" transform="translate(0 1.4)"/></g>`,
+  morta:(p,r)=>{let d="";for(let i=0;i<6;i++){const a=r()*6.28,dd=r()*9;d+=`<circle cx="${(Math.cos(a)*dd).toFixed(1)}" cy="${(Math.sin(a)*dd).toFixed(1)}" r="1.1" fill="#FBEAE6"/>`}
+    return `<g transform="translate(${p.x} ${p.y}) rotate(${p.rot})"><path d="M-13,0 C-13,-9 13,-9 13,0 C13,6 6,11 0,6 C-6,11 -13,6 -13,0Z" fill="#F0B2B0" stroke="#D99390" stroke-width="1.2"/>${d}</g>`},
+  stracc:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot}) scale(${p.s})"><path d="M-9,-2 C-8,-9 2,-10 6,-6 C11,-3 10,5 4,7 C-2,10 -10,5 -9,-2Z" fill="#FFFDF7" stroke="#EEE6D4" stroke-width="1.2"/><path d="M-4,-3 C-2,-6 3,-5 4,-2" stroke="#F3EBDB" stroke-width="1.5" fill="none"/></g>`,
+  pista:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot})"><path d="M-2.5,-1.6 L2,-2.2 L2.6,1.4 L-1.8,2Z" fill="${r()>.5?"#8DB255":"#6E9440"}"/></g>`,
+  garlic:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot})"><ellipse rx="4" ry="2.6" fill="#F5EDD3" stroke="#D9CBA5" stroke-width=".8"/></g>`,
+  oregano:(p,r)=>`<circle cx="${p.x}" cy="${p.y}" r="${(.7+r()*.8).toFixed(1)}" fill="#56662A"/>`,
+  tomato:(p,r)=>`<g transform="translate(${p.x} ${p.y}) rotate(${p.rot})"><path d="M-8,-2 C-6,-8 6,-8 8,-2 C9,5 -9,5 -8,-2Z" fill="#D2412A" stroke="#A62E1C" stroke-width="1"/><path d="M-4,-2 Q0,-5 4,-2" stroke="#F07A5C" stroke-width="1.5" fill="none"/></g>`,
+  char:(p,r)=>`<ellipse cx="${p.x}" cy="${p.y}" rx="${(1.5+r()*3).toFixed(1)}" ry="${(1+r()*1.8).toFixed(1)}" fill="#3B2416" opacity="${(.55+r()*.35).toFixed(2)}" transform="rotate(${p.rot.toFixed(0)} ${p.x.toFixed(1)} ${p.y.toFixed(1)})"/>`,
+  brown:(p,r)=>`<ellipse cx="${p.x}" cy="${p.y}" rx="${(2+r()*4).toFixed(1)}" ry="${(1.5+r()*2.5).toFixed(1)}" fill="#C98A3A" opacity="${(.25+r()*.25).toFixed(2)}"/>`,
+};
+function layer(r, kind, n, maxR, minDist, filter){return scatter(r,n,maxR,minDist,filter).map(p=>T[kind](p,r)).join("")}
+
+function pizzaSVG(spec, id){
+  const r=rng(hash(id)); const uid="p"+hash(id).toString(36);
+  const sauce = spec.base==="red";
+  let s=`<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${spec.label||"pizza"}"><defs>
+  <radialGradient id="${uid}c" cx="50%" cy="45%" r="55%"><stop offset="78%" stop-color="#F3CF8E"/><stop offset="92%" stop-color="#DFA45A"/><stop offset="100%" stop-color="#B9772F"/></radialGradient>
+  <radialGradient id="${uid}s" cx="50%" cy="45%" r="55%"><stop offset="0%" stop-color="${sauce?"#D4472C":"#FBF1D9"}"/><stop offset="100%" stop-color="${sauce?"#A9301C":"#EBD9AF"}"/></radialGradient>
+  <clipPath id="${uid}in"><path d="${wobble(r,100,100,77,26,3)}"/></clipPath>
+  ${[0,1,2,3].map(q=>`<clipPath id="${uid}q${q}"><path d="M100,100 L${100+110*Math.cos(q*Math.PI/2-Math.PI/4)},${100+110*Math.sin(q*Math.PI/2-Math.PI/4)} A110,110 0 0 1 ${100+110*Math.cos((q+1)*Math.PI/2-Math.PI/4)},${100+110*Math.sin((q+1)*Math.PI/2-Math.PI/4)}Z"/></clipPath>`).join("")}
+  </defs>
+  <ellipse cx="100" cy="106" rx="94" ry="90" fill="#000" opacity=".12"/>
+  <path d="${wobble(r,100,100,93,30,2.5)}" fill="url(#${uid}c)"/>
+  ${layer(r,"char",22,92,6,(x,y)=>Math.hypot(x-100,y-100)>80)}
+  <path d="${wobble(r,100,100,77,26,3)}" fill="url(#${uid}s)"/>
+  <g clip-path="url(#${uid}in)">`;
+  // cheese
+  if(spec.cheese==="4f"){
+    s+=`<circle cx="100" cy="100" r="80" fill="#FBEFCF"/>`;
+    s+=layer(r,"mozz",14,66,15)+layer(r,"yellow",10,66,13)+layer(r,"gorgo",8,64,16)+layer(r,"parm",14,66,8)+layer(r,"brown",16,66,10);
+  } else if(spec.cheese!=="none"){
+    s+=layer(r,"mozz",spec.cheese==="light"?7:12,64,spec.cheese==="light"?22:17)+layer(r,"brown",10,60,12);
+  }
+  if(spec.quarters){
+    spec.quarters.forEach((k,q)=>{
+      const cfg={ham:[9,12],mush:[9,12],artich:[7,13],olive:[12,9]}[k];
+      s+=`<g clip-path="url(#${uid}q${q})">${layer(r,k,cfg[0],66,cfg[1],(x,y)=>{const a=Math.atan2(y-100,x-100);let rel=a-(q*Math.PI/2-Math.PI/4);rel=((rel%(2*Math.PI))+2*Math.PI)%(2*Math.PI);return rel>.18&&rel<Math.PI/2-.18 && Math.hypot(x-100,y-100)>10})}</g>`;
+    });
+  }
+  (spec.top||[]).forEach(([k,n,d])=>{s+=layer(r,k,n,66,d)});
+  s+=`</g><ellipse cx="78" cy="70" rx="40" ry="22" fill="#fff" opacity=".07" transform="rotate(-25 78 70)"/></svg>`;
+  return s;
+}
+function wobble(r,cx,cy,R,n,amp){let d="";const pts=[];for(let i=0;i<n;i++){const a=i/n*Math.PI*2,rr=R+(r()-.5)*2*amp;pts.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr])}
+  for(let i=0;i<n;i++){const p0=pts[i],p1=pts[(i+1)%n];const mx=(p0[0]+p1[0])/2,my=(p0[1]+p1[1])/2;d+=(i?"":"M"+((pts[n-1][0]+p0[0])/2).toFixed(1)+","+((pts[n-1][1]+p0[1])/2).toFixed(1))+"Q"+p0[0].toFixed(1)+","+p0[1].toFixed(1)+" "+mx.toFixed(1)+","+my.toFixed(1)}return d+"Z"}
+
+/* ---------- DRINK ILLUSTRATIONS ---------- */
+function drinkSVG(k){
+  const W=`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="băutură">`;
+  const shadow=`<ellipse cx="60" cy="108" rx="34" ry="5" fill="#000" opacity=".1"/>`;
+  const d={
+    espresso:`${shadow}<ellipse cx="60" cy="104" rx="36" ry="7" fill="#fff" stroke="#E3D8C6" stroke-width="2"/><path d="M38,62 L82,62 L78,92 Q60,102 42,92Z" fill="#fff" stroke="#E3D8C6" stroke-width="2"/><path d="M82,68 q14,2 10,14 q-3,8 -12,6" fill="none" stroke="#E3D8C6" stroke-width="4"/><ellipse cx="60" cy="63" rx="21" ry="4" fill="#5B3A22"/><ellipse cx="60" cy="63" rx="15" ry="2.5" fill="#B9844F"/><path d="M52,52 q-4,-8 2,-14 M62,50 q-4,-8 2,-14" stroke="#D8CDBD" stroke-width="2.5" fill="none" stroke-linecap="round"/>`,
+    cappuccino:`${shadow}<ellipse cx="60" cy="104" rx="40" ry="7" fill="#fff" stroke="#E3D8C6" stroke-width="2"/><path d="M30,52 L90,52 L84,90 Q60,104 36,90Z" fill="#fff" stroke="#E3D8C6" stroke-width="2"/><path d="M90,60 q16,2 12,16 q-3,9 -15,7" fill="none" stroke="#E3D8C6" stroke-width="4"/><ellipse cx="60" cy="53" rx="29" ry="6" fill="#C89A68"/><path d="M60,49 c-8,0 -10,5 -5,7 c-6,1 -4,5 5,4 c9,1 11,-3 5,-4 c5,-2 3,-7 -5,-7z" fill="#FFF6E8"/>`,
+    latte:`${shadow}<path d="M40,22 L80,22 L76,102 L44,102Z" fill="#fff" stroke="#E3D8C6" stroke-width="2" opacity=".9"/><path d="M42,40 L78,40 L77,60 L43,60Z" fill="#F4E9D8"/><path d="M43,60 L77,60 L76.5,72 L43.5,72Z" fill="#B47B45"/><path d="M43.5,72 L76.5,72 L76,101 L44,101Z" fill="#EAD6BA"/><rect x="56" y="12" width="4" height="40" rx="2" fill="#8C8C8C" transform="rotate(10 58 30)"/>`,
+    draft:`${shadow}<path d="M38,24 L82,24 L78,104 L42,104Z" fill="#F2B23B" stroke="#D99520" stroke-width="2"/><path d="M38,24 L82,24 L81,36 L39,36Z" fill="#FFF7E6"/><path d="M36,26 q6,-10 14,-4 q6,-8 14,-2 q8,-6 14,2 q6,0 4,6 L38,30Z" fill="#FFF9EE"/><circle cx="52" cy="62" r="2" fill="#FFE09A"/><circle cx="64" cy="78" r="1.6" fill="#FFE09A"/><circle cx="58" cy="90" r="1.3" fill="#FFE09A"/><path d="M46,40 L45,98" stroke="#fff" stroke-width="3" opacity=".35" stroke-linecap="round"/>`,
+    bottle:`${shadow}<path d="M54,10 L66,10 L66,34 Q78,44 78,58 L78,104 Q60,110 42,104 L42,58 Q42,44 54,34Z" fill="#2E6B3E"/><rect x="53" y="6" width="14" height="8" rx="2" fill="#C9A23A"/><rect x="44" y="62" width="32" height="26" rx="3" fill="#F4ECD8"/><rect x="48" y="68" width="24" height="4" fill="#1F4B8F"/><rect x="50" y="76" width="20" height="3" fill="#C4412B"/><path d="M48,46 L47,100" stroke="#fff" stroke-width="3" opacity=".25" stroke-linecap="round"/>`,
+    nonalc:`${shadow}<path d="M54,10 L66,10 L66,34 Q78,44 78,58 L78,104 Q60,110 42,104 L42,58 Q42,44 54,34Z" fill="#7A4A1E"/><rect x="53" y="6" width="14" height="8" rx="2" fill="#C9C9C9"/><rect x="44" y="62" width="32" height="26" rx="3" fill="#fff"/><text x="60" y="80" font-size="11" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" fill="#2E6B3E">0,0%</text><path d="M48,46 L47,100" stroke="#fff" stroke-width="3" opacity=".25" stroke-linecap="round"/>`,
+    red:`${shadow}<path d="M38,18 L82,18 Q86,58 60,66 Q34,58 38,18Z" fill="#fff" stroke="#E3D8C6" stroke-width="2" opacity=".9"/><path d="M39,36 L81,36 Q82,60 60,64 Q38,60 39,36Z" fill="#7B1830"/><path d="M60,66 L60,100" stroke="#E3D8C6" stroke-width="3"/><ellipse cx="60" cy="102" rx="18" ry="4" fill="#fff" stroke="#E3D8C6" stroke-width="2"/><path d="M44,24 Q42,40 46,52" stroke="#fff" stroke-width="3" fill="none" opacity=".6"/>`,
+    white:`${shadow}<path d="M38,18 L82,18 Q86,58 60,66 Q34,58 38,18Z" fill="#fff" stroke="#E3D8C6" stroke-width="2" opacity=".9"/><path d="M39,36 L81,36 Q82,60 60,64 Q38,60 39,36Z" fill="#EBD98A"/><path d="M60,66 L60,100" stroke="#E3D8C6" stroke-width="3"/><ellipse cx="60" cy="102" rx="18" ry="4" fill="#fff" stroke="#E3D8C6" stroke-width="2"/>`,
+    prosecco:`${shadow}<path d="M50,10 L70,10 Q72,56 60,62 Q48,56 50,10Z" fill="#fff" stroke="#E3D8C6" stroke-width="2"/><path d="M50.5,22 L69.5,22 Q70,54 60,59 Q50,54 50.5,22Z" fill="#F1DC7E"/><circle cx="57" cy="44" r="1.5" fill="#fff"/><circle cx="62" cy="34" r="1.3" fill="#fff"/><circle cx="59" cy="28" r="1" fill="#fff"/><path d="M60,62 L60,100" stroke="#E3D8C6" stroke-width="3"/><ellipse cx="60" cy="102" rx="16" ry="4" fill="#fff" stroke="#E3D8C6" stroke-width="2"/>`,
+    winebottle:`${shadow}<path d="M54,6 L66,6 L66,38 Q78,46 78,60 L78,104 Q60,110 42,104 L42,60 Q42,46 54,38Z" fill="#3A1420"/><rect x="53" y="4" width="14" height="14" rx="2" fill="#7B1830"/><rect x="44" y="64" width="32" height="28" rx="2" fill="#F4ECD8"/><text x="60" y="81" font-size="9" text-anchor="middle" font-family="Fraunces,serif" font-style="italic" fill="#7B1830">Rosso</text>`,
+    water:`${shadow}<path d="M52,8 L68,8 L68,22 Q80,30 80,44 L80,104 Q60,110 40,104 L40,44 Q40,30 52,22Z" fill="#DDEFF5" stroke="#A9CFDD" stroke-width="2"/><rect x="51" y="4" width="18" height="8" rx="2" fill="#2F5D7C"/><rect x="42" y="56" width="36" height="24" fill="#2F5D7C" opacity=".85"/><path d="M54,64 q6,-8 12,0 q-6,10 -12,0z" fill="#fff"/>`,
+    lemonade:`${shadow}<path d="M36,26 L84,26 L78,104 L42,104Z" fill="#FFF2B0" stroke="#E8D77A" stroke-width="2"/><rect x="48" y="44" width="12" height="12" rx="2" fill="#fff" opacity=".7" transform="rotate(12 54 50)"/><rect x="62" y="62" width="11" height="11" rx="2" fill="#fff" opacity=".7" transform="rotate(-10 67 67)"/><circle cx="82" cy="28" r="14" fill="#F6D33C" stroke="#E0B416" stroke-width="2"/><circle cx="82" cy="28" r="10" fill="#FCEB8C"/><path d="M82,18 L82,38 M72,28 L92,28 M75,21 L89,35 M89,21 L75,35" stroke="#F6D33C" stroke-width="1.2"/><path d="M54,10 L50,60" stroke="#5E6B34" stroke-width="4" stroke-linecap="round"/><path d="M44,32 q4,-6 8,0" fill="#4E8B2E"/>`,
+    cola:`${shadow}<rect x="40" y="18" width="40" height="88" rx="8" fill="#B7231C"/><rect x="42" y="14" width="36" height="8" rx="3" fill="#CFCFCF"/><rect x="42" y="100" width="36" height="6" rx="3" fill="#A9A9A9"/><path d="M44,58 q16,-12 32,0" stroke="#fff" stroke-width="3" fill="none"/><path d="M46,28 L46,94" stroke="#fff" stroke-width="3" opacity=".25" stroke-linecap="round"/>`,
+    orange:`${shadow}<rect x="40" y="18" width="40" height="88" rx="8" fill="#F08A1C"/><rect x="42" y="14" width="36" height="8" rx="3" fill="#CFCFCF"/><rect x="42" y="100" width="36" height="6" rx="3" fill="#A9A9A9"/><circle cx="60" cy="60" r="12" fill="#FFB347" stroke="#fff" stroke-width="2"/><path d="M60,48 L60,72 M48,60 L72,60" stroke="#fff" stroke-width="1.5"/><path d="M46,28 L46,94" stroke="#fff" stroke-width="3" opacity=".25" stroke-linecap="round"/>`,
+  }[k];
+  return W+d+"</svg>";
+}
+
+/* ---------- MENU ---------- */
+const CATS=[
+  {id:"pizza",name:"Pizza",sub:"Aluat maturat 48h · cuptor pe lemne la 450°C"},
+  {id:"cafea",name:"Cafea",sub:"Espresso blend 70/30 arabica-robusta"},
+  {id:"bere",name:"Bere",sub:""},
+  {id:"vin",name:"Vin",sub:"La pahar 150 ml sau la sticlă"},
+  {id:"racoritoare",name:"Răcoritoare",sub:""},
+];
+const MENU=[
+  {id:"margherita",cat:"pizza",name:"Margherita",price:38,w:"450 g",tags:["veg"],desc:"Sos de roșii San Marzano, fior di latte, busuioc proaspăt, ulei de măsline extravirgin.",art:{base:"red",cheese:"normal",top:[["basil",7,22]]}},
+  {id:"marinara",cat:"pizza",name:"Marinara",price:32,w:"380 g",tags:["veg"],desc:"Sos de roșii San Marzano, usturoi feliat, oregano sicilian, ulei de măsline. Fără brânză.",art:{base:"red",cheese:"none",top:[["garlic",14,11],["oregano",70,4],["basil",3,30]]}},
+  {id:"quattro-formaggi",cat:"pizza",name:"Quattro Formaggi",price:49,w:"480 g",tags:["veg","bianca"],desc:"Pizza bianca: mozzarella fior di latte, gorgonzola dolce, parmigiano reggiano 24 luni, pecorino romano.",art:{base:"white",cheese:"4f"}},
+  {id:"quattro-stagioni",cat:"pizza",name:"Quattro Stagioni",price:52,w:"560 g",tags:[],desc:"Patru anotimpuri pe aceeași pizza: șuncă cotto, ciuperci champignon, anghinare marinate și măsline negre.",art:{base:"red",cheese:"normal",quarters:["ham","mush","artich","olive"]}},
+  {id:"diavola",cat:"pizza",name:"Diavola",price:46,w:"500 g",tags:["hot"],desc:"Sos de roșii, fior di latte, salam picant spianata calabra, fulgi de chili, miere picantă.",art:{base:"red",cheese:"normal",top:[["salami",11,17],["chili",30,5]]}},
+  {id:"crudo-rucola",cat:"pizza",name:"Prosciutto e Rucola",price:54,w:"520 g",tags:[],desc:"Sos de roșii, fior di latte, prosciutto crudo di Parma 18 luni, rucola, parmigiano ras.",art:{base:"red",cheese:"normal",top:[["crudo",7,22],["rucola",12,13],["parm",14,8]]}},
+  {id:"capricciosa",cat:"pizza",name:"Capricciosa",price:51,w:"580 g",tags:[],desc:"Sos de roșii, fior di latte, șuncă cotto, ciuperci, anghinare, măsline negre — totul amestecat.",art:{base:"red",cheese:"normal",top:[["ham",6,16],["mush",7,14],["artich",5,15],["olive",8,10]]}},
+  {id:"tonno-cipolla",cat:"pizza",name:"Tonno e Cipolla",price:47,w:"530 g",tags:[],desc:"Sos de roșii, fior di latte, ton în ulei de măsline, ceapă roșie de Tropea, oregano.",art:{base:"red",cheese:"normal",top:[["tuna",12,13],["onion",9,15],["oregano",30,5]]}},
+  {id:"funghi",cat:"pizza",name:"Funghi",price:42,w:"490 g",tags:["veg"],desc:"Sos de roșii, fior di latte, ciuperci champignon și pleurotus trase la tigaie, cimbru.",art:{base:"red",cheese:"normal",top:[["mush",16,12],["oregano",24,5]]}},
+  {id:"mortadella-pistacchio",cat:"pizza",name:"Mortadella e Pistacchio",price:58,w:"540 g",tags:["bianca"],desc:"Pizza bianca: fior di latte, mortadella di Bologna IGP, stracciatella, fistic de Bronte zdrobit, coajă de lămâie.",art:{base:"white",cheese:"light",top:[["morta",8,20],["stracc",7,16],["pista",40,4]]}},
+
+  {id:"espresso",cat:"cafea",name:"Espresso",price:9,w:"30 ml",desc:"Scurt, intens, cu cremă densă.",drink:"espresso"},
+  {id:"doppio",cat:"cafea",name:"Espresso doppio",price:13,w:"60 ml",desc:"Dublă extracție.",drink:"espresso"},
+  {id:"cappuccino",cat:"cafea",name:"Cappuccino",price:14,w:"180 ml",desc:"Espresso, lapte spumat catifelat.",drink:"cappuccino"},
+  {id:"latte",cat:"cafea",name:"Latte macchiato",price:16,w:"300 ml",desc:"Lapte cald, spumă fină și espresso în straturi.",drink:"latte"},
+
+  {id:"moretti-draft",cat:"bere",name:"Birra Moretti la halbă",price:17,w:"500 ml",desc:"Lager italiană, la draft.",drink:"draft"},
+  {id:"peroni",cat:"bere",name:"Peroni Nastro Azzurro",price:15,w:"330 ml",desc:"Lager crocantă, la sticlă.",drink:"bottle"},
+  {id:"bere-fara",cat:"bere",name:"Bere fără alcool",price:14,w:"330 ml",desc:"0,0% alcool.",drink:"nonalc"},
+
+  {id:"chianti",cat:"vin",name:"Chianti DOCG",price:24,w:"150 ml",desc:"Roșu sec, Toscana — cireșe și condimente.",drink:"red"},
+  {id:"pinot-grigio",cat:"vin",name:"Pinot Grigio",price:21,w:"150 ml",desc:"Alb sec, Veneto — mere verzi, citrice.",drink:"white"},
+  {id:"prosecco",cat:"vin",name:"Prosecco DOC",price:23,w:"150 ml",desc:"Spumant extra dry.",drink:"prosecco"},
+  {id:"montepulciano",cat:"vin",name:"Montepulciano d'Abruzzo",price:115,w:"750 ml",desc:"Sticlă — roșu, corpolent, perfect la Diavola.",drink:"winebottle"},
+
+  {id:"apa",cat:"racoritoare",name:"Apă plată / minerală",price:10,w:"500 ml",desc:"La alegere — spune-ne în observații.",drink:"water"},
+  {id:"limonada",cat:"racoritoare",name:"Limonada casei",price:18,w:"400 ml",desc:"Lămâie, mentă, miere.",drink:"lemonade"},
+  {id:"cola",cat:"racoritoare",name:"Cola",price:12,w:"330 ml",desc:"Doză.",drink:"cola"},
+  {id:"aranciata",cat:"racoritoare",name:"Aranciata",price:13,w:"330 ml",desc:"Suc carbogazos de portocale siciliene.",drink:"orange"},
+];
+const BY_ID=Object.fromEntries(MENU.map(m=>[m.id,m]));
+const ART_CACHE={};
+function art(m){if(ART_CACHE[m.id])return ART_CACHE[m.id];return ART_CACHE[m.id]=m.drink?drinkSVG(m.drink):pizzaSVG({...m.art,label:m.name},m.id)}
+
+/* ---------- utils ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const lei=n=>(Math.round(n*100)/100).toLocaleString("ro-RO",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+" lei";
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+function ago(t){const s=Math.round((Date.now()-t)/1000);if(s<45)return"acum";const m=Math.round(s/60);if(m<60)return`acum ${m} min`;return new Date(t).toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit"})}
+const ICON={
+  bell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`,
+  menu:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 4"/></svg>`,
+  orders:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>`,
+  bill:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>`,
+  check:`<svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>`,
+  apple:`<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.3 1.2 9.7.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-3.8zM14 5.4c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"/></svg>`,
+  google:`<svg viewBox="0 0 24 24" width="20" height="20"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9c-.3 1.4-1 2.5-2.2 3.3v2.7h3.6c2-1.9 3.2-4.7 3.2-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8C3.9 20.6 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.8 14.2c-.2-.7-.4-1.4-.4-2.2s.1-1.5.4-2.2V7H2.1C1.4 8.5 1 10.2 1 12s.4 3.5 1.1 5l3.7-2.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2C17.5 2.1 15 1 12 1 7.7 1 3.9 3.4 2.1 7l3.7 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>`,
+  card:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>`,
+};
+
+/* =========================================================
+   SHARED STATE — event log, merged by id (conflict-free)
+   Sync, in order of preference:
+   1. Supabase (table `events` + Realtime) — any device, persistent
+   2. claude "room" — when hosted as a Claude artifact
+   3. BroadcastChannel + localStorage — tabs of one browser (offline)
+   ========================================================= */
+const SUPABASE_URL = "https://fhllsgpcqwygwsmhhtpx.supabase.co";
+const SUPABASE_KEY = "sb_publishable_8BGQr96jn-VKstuCibj4YA_oTqL4amk"; // cheie publică (publishable), protejată de RLS
+const HISTORY_MS = 24*3600*1000; // la încărcare se iau evenimentele din ultimele 24h
+let EVENTS=[]; const IDS=new Set();
+let bc=null; try{bc=new BroadcastChannel("fiamma-demo")}catch(_){}
+let room=null, sb=null; let syncMode="local", syncReady=false;
+const useSupabase = !!(window.supabase && window.supabase.createClient) && location.protocol.startsWith("http");
+if(!useSupabase){
+  try{(JSON.parse(localStorage.getItem(LS_KEY))||[]).forEach(e=>{if(!IDS.has(e.id)){IDS.add(e.id);EVENTS.push(e)}})}catch(_){}
+  EVENTS.sort((a,b)=>a.t-b.t); syncReady=true;
+}
+const listeners=[];
+const unsent=new Map();
+function save(){ if(useSupabase) return; try{localStorage.setItem(LS_KEY,JSON.stringify(EVENTS.slice(-600)))}catch(_){} }
+function merge(list,remote){
+  let added=[];
+  for(const e of list||[]){ if(e && e.id && !IDS.has(e.id)){IDS.add(e.id);EVENTS.push(e);added.push(e)} }
+  if(!added.length) return;
+  EVENTS.sort((a,b)=>a.t-b.t); save();
+  listeners.forEach(f=>f(added,remote));
+}
+function broadcast(list){
+  try{bc&&bc.postMessage({events:list})}catch(_){}
+  try{room&&room.emit("ev",{events:list})}catch(_){}
+}
+async function pushRemote(e){
+  if(!sb){unsent.set(e.id,e);return}
+  const {error}=await sb.from("events").insert({id:e.id,t:e.t,table_no:e.table||0,type:e.type,ev:e});
+  if(error && !/duplicate|23505/.test(error.message+error.code)){unsent.set(e.id,e);syncMode="offline";render()} else {unsent.delete(e.id); if(syncMode==="offline"){syncMode="supabase";render()}}
+}
+setInterval(()=>{for(const e of [...unsent.values()]) pushRemote(e)},5000);
+function addEvent(e){e.id=uid();e.t=Date.now();merge([e],false);broadcast([e]);if(useSupabase)pushRemote(e);return e}
+if(bc) bc.onmessage=m=>{const d=m.data||{}; if(d.hello){broadcast(EVENTS.slice(-300))} else merge(d.events,true)};
+function unwrap(a){if(a&&a.events)return a;if(a&&a.data&&a.data.events)return a.data;if(a&&a.payload)return a.payload;return a||{}}
+
+async function loadRemote(){
+  const {data,error}=await sb.from("events").select("ev").gt("t",Date.now()-HISTORY_MS).order("t",{ascending:true}).limit(2000);
+  if(error) throw error;
+  merge(data.map(r=>r.ev),false);
+}
+(async()=>{
+  try{ bc&&bc.postMessage({hello:1}) }catch(_){}
+  if(useSupabase){
+    try{
+      sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false}});
+      sb.channel("events-live")
+        .on("postgres_changes",{event:"INSERT",schema:"public",table:"events"},p=>{const e=p.new&&p.new.ev;if(e)merge([e],true)})
+        .subscribe(async st=>{
+          if(st==="SUBSCRIBED"){ syncMode="supabase"; try{await loadRemote()}catch(_){} syncReady=true; render() }
+          else if(st==="CHANNEL_ERROR"||st==="TIMED_OUT"||st==="CLOSED"){ syncMode="offline"; render() }
+        });
+      // încărcare inițială chiar dacă realtime întârzie
+      loadRemote().then(()=>{syncReady=true;render()}).catch(()=>{syncMode="offline";syncReady=true;render()});
+      // la revenirea în aplicație (telefon blocat), reîncarcă ce s-a pierdut
+      document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadRemote().catch(()=>{})});
+    }catch(_){syncMode="offline";syncReady=true;render()}
+    return;
+  }
+  try{
+    if(!window.claude||!window.claude.use) return;
+    const r=await window.claude.use("room");
+    if(!r) return;
+    room=r; syncMode="room";
+    r.on("ev",(a)=>merge(unwrap(a).events,true));
+    r.on("hello",()=>{try{r.emit("ev",{events:EVENTS.slice(-300)})}catch(_){}});
+    try{r.presence({view:location.hash||"home"})}catch(_){}
+    try{r.emit("hello",{})}catch(_){}
+    render();
+  }catch(_){}
+})();
+
+/* ---------- derive table state ---------- */
+function tableState(n){
+  let start=0;
+  for(const e of EVENTS){ if(e.type==="resetAll"||(e.type==="reset"&&e.table===n)) start=e.t }
+  const ev=EVENTS.filter(e=>e.table===n && e.t>=start && e.type!=="reset");
+  const orders=[],calls=[],bills=[],pays=[]; const ost={},ack={};
+  for(const e of ev){
+    if(e.type==="order") orders.push(e);
+    else if(e.type==="orderStatus") ost[e.ref]=e.status;
+    else if(e.type==="call") calls.push(e);
+    else if(e.type==="billReq") bills.push(e);
+    else if(e.type==="ack") ack[e.ref]=e.t;
+    else if(e.type==="pay") pays.push(e);
+  }
+  orders.forEach(o=>o.status=ost[o.id]||"nou");
+  const lastPay=pays[pays.length-1];
+  const since=lastPay?lastPay.t:0;
+  const open=orders.filter(o=>o.t>since);
+  const subtotal=open.reduce((s,o)=>s+o.items.reduce((a,i)=>a+(BY_ID[i.id]?.price||0)*i.qty,0),0);
+  const openCalls=calls.filter(c=>!ack[c.id]);
+  const openBill=bills.filter(b=>!ack[b.id]&&b.t>since).pop();
+  let status="free";
+  if(openBill) status="bill"; else if(openCalls.length) status="call";
+  else if(open.some(o=>o.status==="nou")) status="new";
+  else if(open.length) status="busy";
+  else if(lastPay) status="paid";
+  return {n,orders,open,subtotal,calls,openCalls,bills,openBill,pays,lastPay,ack,status};
+}
+function orderTotal(o){return o.items.reduce((a,i)=>a+(BY_ID[i.id]?.price||0)*i.qty,0)}
+
+/* =========================================================
+   ROUTER
+   ========================================================= */
+function route(){const h=(location.hash||"").replace("#","");
+  const m=h.match(/^masa-(\d{1,2})$/); if(m&&+m[1]>=1&&+m[1]<=TABLES) return {v:"client",table:+m[1]};
+  if(h==="ospatar") return {v:"staff"}; if(h==="mese") return {v:"qr"}; return {v:"home"}}
+let R=route();
+window.addEventListener("hashchange",()=>{R=route();closeSheet();window.scrollTo(0,0);render();try{room&&room.presence({view:location.hash})}catch(_){}});
+function go(h){location.hash=h}
+function baseUrl(){try{return localStorage.getItem(LS_BASE)||DEFAULT_BASE}catch(_){return DEFAULT_BASE}}
+function tableUrl(n){const b=baseUrl();return (b.startsWith("http")?b.split("#")[0]:location.href.split("#")[0])+"#masa-"+n}
+function qrInto(el,text,size){
+  el.innerHTML="";
+  if(window.QRCode){ try{ new QRCode(el,{text,width:size,height:size,colorDark:"#1F1A17",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M}); return }catch(_){} }
+  el.innerHTML=`<div class="small" style="word-break:break-all">${esc(text)}</div>`;
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+function render(){
+  const bd=document.getElementById("badge"); if(bd) bd.style.display=R.v==="client"?"none":"";
+  if(R.v==="client") return renderClient();
+  if(R.v==="staff") return renderStaff();
+  if(R.v==="qr") return renderQR();
+  renderHome();
+}
+listeners.push((added,remote)=>{
+  if(R.v==="staff"&&remote) notify(added);
+  if(R.v==="client"&&remote) clientNotify(added);
+  render();
+});
+setInterval(()=>{if(R.v==="staff")render()},20000);
+
+/* ---------- HOME ---------- */
+function renderHome(){
+  document.title="Fiamma · demo comandă la masă";
+  $("#app").innerHTML=`<div class="home">
+    <div class="brand"><div class="brand-mark">F</div><div><div class="brand-name">Fiamma</div><div class="brand-sub">Pizzeria contemporanea</div></div></div>
+    <div class="hero">
+      <div>
+        <h1>Scanezi. Comanzi.<br><em>Plătești.</em></h1>
+        <p>Fiecare masă are propriul cod QR. Clientul vede meniul, comandă direct din telefon, cheamă ospătarul cu un buton și achită nota cu Apple Pay, Google Pay sau card — cu bacșiș inclus.</p>
+        <div class="cta-row">
+          <button class="btn btn-primary" onclick="go('masa-5')">Deschide ca client · Masa 5</button>
+          <button class="btn btn-dark" onclick="go('ospatar')">Ecran ospătar</button>
+          <button class="btn btn-ghost" onclick="go('mese')">Coduri QR mese</button>
+        </div>
+        <div class="demo-qr"><div class="qr" id="homeQr"></div><div><b>Încearcă pe telefon</b><div class="small">Scanează codul pentru Masa 5 și ține ecranul ospătarului deschis pe laptop: comenzile, chemările și plățile apar în timp real.</div></div></div>
+      </div>
+      <div class="hero-art">${pizzaSVG({...BY_ID["quattro-stagioni"].art},"hero")}</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">QR pe fiecare masă</div><h3>QR unic pe masă</h3><p>Ospătarul știe exact de unde vine comanda. Codurile se generează automat și se printează pe suporturi de masă.</p></div>
+      <div class="step"><div class="n">Un singur buton</div><h3>Comandă sau cheamă ospătarul</h3><p>Clientul comandă singur, sau cere ajutor: întrebări, comandă la ospătar, alergeni — un singur buton.</p></div>
+      <div class="step"><div class="n">Plată din telefon</div><h3>Nota pe telefon</h3><p>Plată instant cu Apple Pay, Google Pay sau card și bacșiș, ori cere nota fizic — tot de pe aceeași pagină.</p></div>
+    </div>
+    <p class="small" style="margin-top:40px">Demo de portofoliu · plățile sunt simulate · ilustrațiile țin locul fotografiilor profesionale de produs.</p>
+  </div>`;
+  qrInto($("#homeQr"),tableUrl(5),120);
+}
+
+/* ---------- CLIENT ---------- */
+let cart={}; let cartTable=null; let cTab="menu"; let cCat="pizza"; let lastPaidSeen=null;
+function cartKey(id,note){return id+"|"+(note||"")}
+function cartCount(){return Object.values(cart).reduce((a,c)=>a+c.qty,0)}
+function cartTotal(){return Object.values(cart).reduce((a,c)=>a+BY_ID[c.id].price*c.qty,0)}
+function qtyOf(id){return Object.values(cart).filter(c=>c.id===id).reduce((a,c)=>a+c.qty,0)}
+
+function renderClient(){
+  const n=R.table; if(cartTable!==n){cart={};cartTable=n;cTab="menu"}
+  document.title=`Fiamma · Masa ${n}`;
+  const st=tableState(n);
+  const callOpen=st.openCalls.length>0;
+  const banners=[];
+  if(callOpen) banners.push(`<div class="banner gold">${ICON.bell.replace("<svg",'<svg width="18" height="18"')} Ospătarul a fost anunțat și vine la masă.</div>`);
+  if(st.openBill) banners.push(`<div class="banner blue">🧾 Ospătarul aduce nota (${st.openBill.method==="cash"?"numerar":"card la POS"}).</div>`);
+  if(st.status==="paid") banners.push(`<div class="banner ok">✓ Nota a fost achitată. Mulțumim și vă mai așteptăm!</div>`);
+  const openCount=st.orders.filter(o=>o.status!=="servit").length;
+
+  let body="";
+  if(cTab==="menu"){
+    body=`<div class="c-hero"><h2>Buonasera</h2><p>Comandă direct de pe telefon. Pizza vine în ~15 minute.</p><p style="font-size:12px;margin-top:4px">Demo · plățile sunt simulate</p></div>
+    ${CATS.map(c=>`<div id="cat-${c.id}"><div class="section-title">${c.name}${c.sub?`<small>${c.sub}</small>`:""}</div>
+      <div class="items">${MENU.filter(m=>m.cat===c.id).map(itemRow).join("")}</div></div>`).join("")}
+    <div style="height:30px"></div>`;
+  } else if(cTab==="orders"){
+    body=`<div class="c-hero"><h2>Comenzile mesei</h2><p>Statusul se actualizează în timp real.</p></div><div class="panel">
+    ${st.orders.length?st.orders.slice().reverse().map(o=>`<div class="card"><div class="row"><b>Comanda #${o.id.slice(-4).toUpperCase()}</b>${statusPill(o.status)}</div>
+      <div class="small" style="margin:2px 0 8px">${ago(o.t)}${o.via==="ospatar"?" · prin ospătar":""}</div>
+      ${o.items.map(i=>`<div class="line-item"><span>${i.qty}× ${esc(BY_ID[i.id]?.name)}${i.note?`<span class="note">${esc(i.note)}</span>`:""}</span><span>${lei(BY_ID[i.id].price*i.qty)}</span></div>`).join("")}
+    </div>`).join(""):emptyState("Nicio comandă încă","Alege ceva bun din meniu.")}
+    </div>`;
+  } else {
+    body=`<div class="c-hero"><h2>Nota de plată</h2><p>Masa ${n}</p></div><div class="panel">${billView(st)}</div>`;
+  }
+
+  $("#app").innerHTML=`<div class="client">
+    <div class="c-top">
+      <div class="c-top-row">
+        <div class="brand"><div class="brand-mark" style="width:34px;height:34px;font-size:18px">F</div><div><div class="brand-name" style="font-size:19px">Fiamma</div></div></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="bell ${callOpen?"active":""}" onclick="openWaiter()">${ICON.bell}<span>${callOpen?"Vine":"Ospătar"}</span></button>
+          <span class="table-chip">Masa ${n}</span>
+        </div>
+      </div>
+      ${cTab==="menu"?`<div class="cats">${CATS.map(c=>`<button class="cat ${cCat===c.id?"on":""}" onclick="jumpCat('${c.id}')">${c.name}</button>`).join("")}</div>`:`<div style="height:12px"></div>`}
+    </div>
+    ${banners.join("")}
+    ${body}
+    ${cartCount()&&cTab==="menu"?`<button class="cartbar" onclick="openCart()"><span><span class="count">${cartCount()}</span>Vezi coșul</span><span>${lei(cartTotal())}</span></button>`:""}
+    <nav class="tabbar">
+      <button class="tab ${cTab==="menu"?"on":""}" onclick="setTab('menu')">${ICON.menu}Meniu</button>
+      <button class="tab ${cTab==="orders"?"on":""}" onclick="setTab('orders')">${ICON.orders}Comenzi${openCount?`<span class="dot">${openCount}</span>`:""}</button>
+      <button class="tab ${cTab==="bill"?"on":""}" onclick="setTab('bill')">${ICON.bill}Nota${st.subtotal&&st.status!=="paid"?`<span class="dot">•</span>`:""}</button>
+    </nav>
+  </div>`;
+  if(cTab==="menu") setupCatSpy();
+}
+function itemRow(m){const q=qtyOf(m.id);
+  const tags=(m.tags||[]).map(t=>`<span class="tag ${t}">${{veg:"veg",hot:"picant",bianca:"bianca"}[t]}</span>`).join("");
+  return `<button class="item" onclick="openItem('${m.id}')"><div class="thumb ${m.drink?"drink":""}">${art(m)}${q?`<span class="qty-badge">${q}</span>`:""}</div>
+  <div><h4>${esc(m.name)}${tags}</h4><div class="desc">${esc(m.desc)}</div><div class="meta"><span class="price">${lei(m.price)}<span class="weight">${m.w}</span></span><span class="add">+</span></div></div></button>`}
+function statusPill(s){return {nou:`<span class="status st-nou">Trimisă</span>`,prep:`<span class="status st-prep">În preparare</span>`,servit:`<span class="status st-servit">Servită</span>`}[s]}
+function emptyState(t,s){return `<div class="empty">${pizzaSVG({base:"red",cheese:"none",top:[["basil",3,30]]},"empty")}<h3 class="serif" style="margin:10px 0 4px;color:var(--ink)">${t}</h3><div>${s}</div></div>`}
+function setTab(t){cTab=t;window.scrollTo(0,0);render()}
+function jumpCat(id){cCat=id;const el=document.getElementById("cat-"+id);if(el){window.scrollTo({top:el.offsetTop-110,behavior:"smooth"})}render()}
+let spyBound=false;
+function setupCatSpy(){if(spyBound)return;spyBound=true;window.addEventListener("scroll",()=>{if(R.v!=="client"||cTab!=="menu")return;let cur=CATS[0].id;for(const c of CATS){const el=document.getElementById("cat-"+c.id);if(el&&el.getBoundingClientRect().top<140)cur=c.id}if(cur!==cCat){cCat=cur;document.querySelectorAll(".cat").forEach((b,i)=>b.classList.toggle("on",CATS[i].id===cur))}},{passive:true})}
+
+function billView(st){
+  if(st.status==="paid"&&!st.open.length){const p=st.lastPay;
+    return `<div class="card success"><div class="check">${ICON.check}</div><h3 class="serif" style="margin:0 0 6px;font-size:24px">Plată reușită</h3>
+    <div class="small">${p.method==="cash"?"Încasat în numerar":p.method==="pos"?"Încasat cu cardul la POS":"Plătit cu "+({apple:"Apple Pay",google:"Google Pay",card:"cardul"}[p.method])}</div>
+    <div class="line-item" style="margin-top:14px"><span>Subtotal</span><span>${lei(p.subtotal)}</span></div>
+    ${p.tip?`<div class="line-item"><span>Bacșiș</span><span>${lei(p.tip)}</span></div>`:""}
+    <div class="total-row"><span>Total</span><span>${lei(p.total)}</span></div>
+    <p class="small" style="margin-top:12px">Bonul fiscal se emite de restaurant. Grazie mille!</p></div>`}
+  if(!st.open.length) return emptyState("Nota e goală","Comenzile trimise apar aici automat.");
+  const agg={};st.open.forEach(o=>o.items.forEach(i=>{agg[i.id]=(agg[i.id]||0)+i.qty}));
+  return `<div class="card">${Object.entries(agg).map(([id,q])=>`<div class="line-item"><span>${q}× ${esc(BY_ID[id].name)}</span><span>${lei(BY_ID[id].price*q)}</span></div>`).join("")}
+    <div class="total-row"><span>Total</span><span>${lei(st.subtotal)}</span></div></div>
+    <button class="btn btn-primary btn-block" style="margin-bottom:10px;height:54px" onclick="openPay()">Plătește acum cu telefonul</button>
+    <button class="btn btn-ghost btn-block" onclick="openAskBill()" ${st.openBill?"disabled style='opacity:.5'":""}>${st.openBill?"Ospătarul aduce nota":"Cere nota de la ospătar"}</button>`;
+}
+
+/* sheets */
+function sheet(html){closeSheet();const o=document.createElement("div");o.className="overlay";o.id="ov";o.innerHTML=`<div class="sheet" onclick="event.stopPropagation()"><div class="grab"></div>${html}</div>`;o.onclick=closeSheet;document.body.appendChild(o)}
+function closeSheet(){const o=$("#ov");if(o)o.remove()}
+let sel={id:null,qty:1};
+function openItem(id){const m=BY_ID[id];sel={id,qty:1};
+  sheet(`<div class="big-art">${art(m)}</div><h3>${esc(m.name)}</h3><div class="small" style="font-size:14px">${esc(m.desc)}</div>
+  <div class="row" style="margin:12px 0 16px"><span class="price" style="font-size:18px">${lei(m.price)}<span class="weight">${m.w}</span></span>
+  <div class="stepper"><button onclick="step(-1)">−</button><span id="sq">1</span><button onclick="step(1)">+</button></div></div>
+  <textarea class="note-in" id="note" rows="2" placeholder="Observații (ex: fără ceapă, bine făcută)"></textarea>
+  <button class="btn btn-primary btn-block" style="margin-top:14px;height:52px" id="addBtn" onclick="addToCart()">Adaugă · ${lei(m.price)}</button>`)}
+function step(d){sel.qty=Math.max(1,Math.min(20,sel.qty+d));$("#sq").textContent=sel.qty;$("#addBtn").textContent="Adaugă · "+lei(BY_ID[sel.id].price*sel.qty)}
+function addToCart(){const note=$("#note").value.trim().slice(0,120);const k=cartKey(sel.id,note);cart[k]=cart[k]||{id:sel.id,note,qty:0};cart[k].qty+=sel.qty;closeSheet();render()}
+function openCart(){
+  const rows=Object.entries(cart).map(([k,c])=>`<div class="line-item" style="align-items:center"><span><b>${esc(BY_ID[c.id].name)}</b>${c.note?`<span class="note">${esc(c.note)}</span>`:""}<span class="small">${lei(BY_ID[c.id].price*c.qty)}</span></span>
+   <div class="stepper"><button onclick="cartStep('${esc(k)}',-1)">−</button><span>${c.qty}</span><button onclick="cartStep('${esc(k)}',1)">+</button></div></div>`).join("");
+  sheet(`<h3>Coșul tău</h3><div class="small">Masa ${R.table}</div><div class="card" style="margin-top:12px">${rows}<div class="total-row"><span>Total</span><span>${lei(cartTotal())}</span></div></div>
+  <button class="btn btn-primary btn-block" style="height:54px" onclick="sendOrder()">Trimite comanda</button>
+  <p class="small" style="text-align:center">Plătești la final, din pagina „Nota”.</p>`)}
+function cartStep(k,d){if(!cart[k])return;cart[k].qty+=d;if(cart[k].qty<=0)delete cart[k];if(!cartCount()){closeSheet();render();return}openCart();render();$("#ov")||openCart()}
+function sendOrder(){const items=Object.values(cart).map(c=>({id:c.id,qty:c.qty,note:c.note}));if(!items.length)return;
+  addEvent({type:"order",table:R.table,items});cart={};
+  sheet(`<div class="success"><div class="check">${ICON.check}</div><h3>Comanda a fost trimisă</h3><p class="small">O vezi în tab-ul „Comenzi”. Te anunțăm când intră în preparare.</p>
+  <button class="btn btn-dark btn-block" style="margin-top:10px" onclick="closeSheet();setTab('orders')">Vezi comanda</button></div>`);render()}
+function openWaiter(){const st=tableState(R.table);
+  if(st.openCalls.length){sheet(`<div class="success"><div class="check" style="background:var(--orange)">${ICON.bell.replace("<svg",'<svg width="36" height="36" style="color:#fff"')}</div><h3>Ospătarul vine</h3><p class="small">L-ai chemat ${ago(st.openCalls[0].t)}. Motiv: ${esc(st.openCalls[0].reason)}</p><button class="btn btn-ghost btn-block" onclick="closeSheet()">OK</button></div>`);return}
+  sheet(`<h3>Cheamă ospătarul</h3><p class="small">Alege motivul ca ospătarul să vină pregătit.</p>
+  ${[["Am o întrebare despre meniu","Ingrediente, alergeni, recomandări","❓"],["Vreau să comand prin ospătar","Preferi să comanzi direct cu el","🗒️"],["Am nevoie de ceva la masă","Tacâmuri, șervețele, apă","🍽️"],["Altceva","","💬"]].map(([t,s,i])=>`<button class="opt" onclick="callWaiter('${t}')"><span class="ic">${i}</span><span>${t}${s?`<small>${s}</small>`:""}</span></button>`).join("")}`)}
+function callWaiter(reason){addEvent({type:"call",table:R.table,reason});sheet(`<div class="success"><div class="check" style="background:var(--gold)">${ICON.check}</div><h3>Ospătarul a fost anunțat</h3><p class="small">Vine la Masa ${R.table} în câteva momente.</p><button class="btn btn-ghost btn-block" onclick="closeSheet()">OK</button></div>`);render()}
+function openAskBill(){sheet(`<h3>Cere nota</h3><p class="small">Ospătarul aduce nota la masă. Cum vrei să plătești?</p>
+  <button class="opt" onclick="askBill('pos')"><span class="ic">💳</span><span>Card, la POS<small>Ospătarul vine cu terminalul</small></span></button>
+  <button class="opt" onclick="askBill('cash')"><span class="ic">💶</span><span>Numerar</span></button>`)}
+function askBill(method){addEvent({type:"billReq",table:R.table,method});sheet(`<div class="success"><div class="check" style="background:var(--blue)">${ICON.check}</div><h3>Nota vine imediat</h3><p class="small">Ospătarul a primit cererea.</p><button class="btn btn-ghost btn-block" onclick="closeSheet()">OK</button></div>`);render()}
+
+let pay={tipPct:10,custom:null};
+function tipAmt(sub){return pay.custom!=null?pay.custom:Math.round(sub*pay.tipPct)/100}
+function openPay(){const st=tableState(R.table);const sub=st.subtotal;
+  sheet(`<h3>Plătește nota</h3><div class="small">Masa ${R.table}</div>
+  <div class="card" style="margin-top:12px"><div class="line-item"><span>Subtotal</span><span>${lei(sub)}</span></div>
+  <div style="padding:10px 0"><div style="font-weight:600;margin-bottom:8px">Bacșiș pentru echipă</div>
+  <div class="chips">${[0,5,10,15].map(p=>`<button class="chip ${pay.custom==null&&pay.tipPct===p?"on":""}" onclick="setTip(${p})">${p?p+"%":"Fără"}<div class="small" style="color:inherit;opacity:.7;font-weight:500">${p?lei(Math.round(sub*p)/100):"—"}</div></button>`).join("")}
+  <button class="chip ${pay.custom!=null?"on":""}" onclick="customTip()">Altă sumă${pay.custom!=null?`<div class="small" style="color:inherit;opacity:.7">${lei(pay.custom)}</div>`:""}</button></div>
+  <div id="customBox" class="${pay.custom!=null?"":"hidden"}" style="margin-top:8px"><input class="txt" id="customIn" type="number" min="0" step="1" inputmode="decimal" placeholder="Suma în lei" value="${pay.custom??""}" oninput="pay.custom=Math.max(0,+this.value||0);updPayTotal(${sub})"></div></div>
+  <div class="total-row"><span>Total de plată</span><span id="payTotal">${lei(sub+tipAmt(sub))}</span></div></div>
+  <button class="pay-btn pay-apple" onclick="doPay('apple')">${ICON.apple} Pay</button>
+  <button class="pay-btn pay-google" onclick="doPay('google')">${ICON.google} Pay</button>
+  <button class="pay-btn pay-card" onclick="cardForm()">${ICON.card} Card bancar</button>
+  <p class="small" style="text-align:center">Plată simulată pentru demo — nu se debitează nimic.</p>`)}
+function setTip(p){pay.tipPct=p;pay.custom=null;openPay()}
+function customTip(){pay.custom=pay.custom??0;openPay();setTimeout(()=>$("#customIn")&&$("#customIn").focus(),50)}
+function updPayTotal(sub){$("#payTotal").textContent=lei(sub+tipAmt(sub))}
+function cardForm(){const sub=tableState(R.table).subtotal;
+  sheet(`<h3>Card bancar</h3><p class="small">Demo: date de test precompletate, nu introduce un card real.</p>
+  <div class="card-form"><input class="full" value="4242 4242 4242 4242" readonly aria-label="Număr card (test)"><input value="12 / 29" readonly aria-label="Expirare"><input value="123" readonly aria-label="CVC"><input class="full" value="Client Demo" readonly aria-label="Nume"></div>
+  <button class="btn btn-primary btn-block" style="height:52px" onclick="doPay('card')">Plătește ${lei(sub+tipAmt(sub))}</button>
+  <button class="btn btn-ghost btn-block" style="margin-top:8px" onclick="openPay()">Înapoi</button>`)}
+function doPay(method){const st=tableState(R.table);const sub=st.subtotal;const tip=tipAmt(sub);
+  sheet(`<div class="spinner"></div><p style="text-align:center;font-weight:600">${{apple:"Se confirmă cu Apple Pay…",google:"Se confirmă cu Google Pay…",card:"Se autorizează plata…"}[method]}</p>`);
+  setTimeout(()=>{addEvent({type:"pay",table:R.table,method,subtotal:sub,tip,total:sub+tip});pay={tipPct:10,custom:null};
+    sheet(`<div class="success"><div class="check">${ICON.check}</div><h3>Mulțumim!</h3><p class="small">Ai plătit ${lei(sub+tip)}${tip?` (inclusiv ${lei(tip)} bacșiș)`:""}. Ospătarul a fost notificat.</p><button class="btn btn-dark btn-block" onclick="closeSheet();setTab('bill')">Vezi chitanța</button></div>`);render()},1600)}
+function clientNotify(added){
+  for(const e of added){ if(e.table!==R.table) continue;
+    if(e.type==="orderStatus"&&e.status==="prep") toast("👨‍🍳 Comanda ta a intrat în preparare");
+    if(e.type==="orderStatus"&&e.status==="servit") toast("🍕 Buon appetito!");
+    if(e.type==="pay"&&e.by==="staff") toast("✓ Nota a fost încasată");
+  }
+}
+function toast(msg){document.querySelectorAll(".toast").forEach(x=>x.remove());const t=document.createElement("div");t.className="toast";t.innerHTML=`<span class="ti">F</span><span>Fiamma<small>${esc(msg)}</small></span>`;document.body.appendChild(t);setTimeout(()=>{t.style.transition="opacity .3s, transform .3s";t.style.opacity="0";t.style.transform="translate(-50%,-20px)"},3000);setTimeout(()=>t.remove(),3400)}
+
+/* ---------- STAFF ---------- */
+let selTable=null; let soundOn=false; let actx=null; let confirmReset=false;
+function beep(kind){if(!soundOn||!actx)return;try{const o=actx.createOscillator(),g=actx.createGain();o.connect(g);g.connect(actx.destination);const f={order:880,call:660,bill:520,pay:990}[kind]||700;o.frequency.value=f;g.gain.setValueAtTime(.0001,actx.currentTime);g.gain.exponentialRampToValueAtTime(.25,actx.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.35);o.start();o.stop(actx.currentTime+.4);
+  if(kind==="call"||kind==="bill"){const o2=actx.createOscillator(),g2=actx.createGain();o2.connect(g2);g2.connect(actx.destination);o2.frequency.value=f*1.25;g2.gain.setValueAtTime(.0001,actx.currentTime+.4);g2.gain.exponentialRampToValueAtTime(.22,actx.currentTime+.42);g2.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+.75);o2.start(actx.currentTime+.4);o2.stop(actx.currentTime+.8)}}catch(_){}}
+function notify(added){for(const e of added){if(e.by==="staff")continue;if(e.type==="order")beep("order");if(e.type==="call")beep("call");if(e.type==="billReq")beep("bill");if(e.type==="pay")beep("pay")}}
+function toggleSound(){soundOn=!soundOn;if(soundOn){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume();beep("order")}catch(_){}}render()}
+const ST_LABEL={free:"Liberă",busy:"Ocupată",new:"Comandă nouă",call:"Cheamă ospătarul",bill:"Cere nota",paid:"Plătită · de eliberat"};
+function renderStaff(){
+  document.title="Fiamma · Ospătar";
+  const states=[...Array(TABLES)].map((_,i)=>tableState(i+1));
+  // feed
+  const items=[];
+  states.forEach(st=>{
+    st.orders.forEach(o=>items.push({k:"order",t:o.t,st,o,done:o.status==="servit"}));
+    st.calls.forEach(c=>items.push({k:"call",t:c.t,st,c,done:!!st.ack[c.id]}));
+    st.bills.forEach(b=>items.push({k:"bill",t:b.t,st,b,done:!!st.ack[b.id]||!!(st.lastPay&&st.lastPay.t>b.t)}));
+    st.pays.forEach(p=>items.push({k:"pay",t:p.t,st,p,done:true}));
+  });
+  items.sort((a,b)=>(a.done-b.done)||(b.t-a.t));
+  const pending=items.filter(i=>!i.done).length;
+
+  $("#app").innerHTML=`<div class="staff">
+  <div class="s-top">
+    <div class="brand"><div class="brand-mark" style="width:36px;height:36px;font-size:19px">F</div><div><div class="brand-name">Fiamma · Sală</div><div class="brand-sub">Ecran ospătar</div></div></div>
+    <div class="live ${syncMode==="offline"?"off":""}"><i></i>${({supabase:"Live · sincronizat pe orice dispozitiv",room:"Live · sincronizat între dispozitive",offline:"⚠ Fără conexiune la server — reîncerc…",local:"Live · tab-urile din acest browser"})[syncMode]}</div>
+    <div class="s-actions">
+      <button class="s-btn ${soundOn?"on":""}" onclick="toggleSound()">${soundOn?"🔔 Sunet pornit":"🔕 Pornește sunetul"}</button>
+      <button class="s-btn" onclick="go('mese')">Coduri QR</button>
+      <button class="s-btn" onclick="go('')">Acasă</button>
+      <button class="s-btn" style="${confirmReset?"background:var(--tomato)":""}" onclick="resetAll()">${confirmReset?"Sigur? Apasă din nou":"Resetează demo"}</button>
+    </div>
+  </div>
+  <div class="s-body">
+    <div>
+      <h2 class="s-h">Mese</h2>
+      <div class="legend"><span style="--c:var(--warn)">comandă nouă</span><span style="--c:var(--gold)">cheamă ospătarul</span><span style="--c:var(--blue)">cere nota</span><span style="--c:var(--ok)">plătită</span></div>
+      <div class="tables">${states.map(st=>`<button class="tbl s-${st.status} ${selTable===st.n?"sel":""}" onclick="pickTable(${st.n})">
+        <div class="num">${st.n}</div><div><div class="lbl">${ST_LABEL[st.status]}</div><div class="amt">${st.subtotal?lei(st.subtotal):st.lastPay&&st.status==="paid"?lei(st.lastPay.total):"—"}</div></div></button>`).join("")}</div>
+      ${selTable?tableDetail(states[selTable-1]):`<p class="small" style="margin-top:18px">Apasă pe o masă pentru detalii. Deschide <a href="#masa-5">Masa 5</a> într-un alt tab sau pe telefon ca să trimiți comenzi.</p>`}
+    </div>
+    <div>
+      <h2 class="s-h">De făcut ${pending?`<span class="status st-nou" style="vertical-align:4px">${pending}</span>`:""}</h2>
+      <div class="feed">${items.length?items.slice(0,60).map(feedCard).join(""):`<div class="ev"><div class="small">Încă nimic. Activitatea meselor apare aici în timp real.</div></div>`}</div>
+    </div>
+  </div></div>`;
+}
+function feedCard(i){const n=i.st.n;
+  if(i.k==="order"){const o=i.o;return `<div class="ev k-order ${i.done?"done":""}"><div class="ev-h"><span><b>Masa ${n}</b> · comandă #${o.id.slice(-4).toUpperCase()}</span><span>${ago(o.t)}</span></div>
+    <ul>${o.items.map(x=>`<li><b>${x.qty}×</b> ${esc(BY_ID[x.id]?.name)} ${x.note?`<div class="note">↳ ${esc(x.note)}</div>`:""}</li>`).join("")}</ul>
+    <div class="ev-actions">${o.status==="nou"?`<button class="mini primary" onclick="setOrder('${o.id}',${n},'prep')">Preia → în preparare</button>`:o.status==="prep"?`<button class="mini ok" onclick="setOrder('${o.id}',${n},'servit')">Marchează servită</button>`:`${statusPill("servit")}`}<span class="small" style="margin-left:auto;align-self:center">${lei(orderTotal(o))}</span></div></div>`}
+  if(i.k==="call"){return `<div class="ev k-call ${i.done?"done":""}"><div class="ev-h"><span><b>Masa ${n}</b> · cheamă ospătarul</span><span>${ago(i.c.t)}</span></div><div style="margin-top:6px">${esc(i.c.reason)}</div>
+    <div class="ev-actions">${i.done?`<span class="small">✓ preluat</span>`:`<button class="mini primary" onclick="ackEv('${i.c.id}',${n})">Am preluat, merg la masă</button>`}</div></div>`}
+  if(i.k==="bill"){const st=i.st;return `<div class="ev k-bill ${i.done?"done":""}"><div class="ev-h"><span><b>Masa ${n}</b> · cere nota</span><span>${ago(i.b.t)}</span></div><div style="margin-top:6px">${i.b.method==="cash"?"💶 Numerar":"💳 Card la POS"} · <b>${lei(st.subtotal)}</b></div>
+    <div class="ev-actions">${i.done?`<span class="small">✓ rezolvat</span>`:`<button class="mini" onclick="ackEv('${i.b.id}',${n})">Nota dusă</button><button class="mini ok" onclick="staffPay(${n},'${i.b.method}')">Încasat</button>`}</div></div>`}
+  if(i.k==="pay"){const p=i.p;return `<div class="ev k-pay done"><div class="ev-h"><span><b>Masa ${n}</b> · plată</span><span>${ago(p.t)}</span></div><div style="margin-top:6px">✓ ${lei(p.total)} ${p.tip?`<span class="small">(bacșiș ${lei(p.tip)})</span>`:""} · ${{apple:"Apple Pay",google:"Google Pay",card:"card online",pos:"card la POS",cash:"numerar"}[p.method]}</div></div>`}
+}
+function tableDetail(st){
+  const agg={};st.open.forEach(o=>o.items.forEach(i=>{agg[i.id]=(agg[i.id]||0)+i.qty}));
+  return `<div class="detail"><div class="row"><h2 class="s-h" style="margin:0">Masa ${st.n} · ${ST_LABEL[st.status]}</h2><button class="mini" onclick="pickTable(null)">Închide</button></div>
+  ${Object.keys(agg).length?`<div style="margin-top:10px">${Object.entries(agg).map(([id,q])=>`<div class="line-item"><span>${q}× ${esc(BY_ID[id].name)}</span><span>${lei(BY_ID[id].price*q)}</span></div>`).join("")}<div class="total-row"><span>Total deschis</span><span>${lei(st.subtotal)}</span></div></div>`:`<p class="small">Nicio comandă deschisă.</p>`}
+  <div class="ev-actions" style="margin-top:14px">
+    ${st.subtotal?`<button class="mini ok" onclick="staffPay(${st.n},'pos')">Încasat card POS</button><button class="mini ok" onclick="staffPay(${st.n},'cash')">Încasat numerar</button>`:""}
+    <button class="mini" onclick="freeTable(${st.n})">Eliberează masa</button>
+    <a class="mini" href="#masa-${st.n}" style="text-decoration:none;color:inherit">Vezi ca client ↗</a>
+  </div></div>`}
+function pickTable(n){selTable=n;render()}
+function setOrder(ref,table,status){addEvent({type:"orderStatus",table,ref,status,by:"staff"})}
+function ackEv(ref,table){addEvent({type:"ack",table,ref,by:"staff"})}
+function staffPay(table,method){const st=tableState(table);if(!st.subtotal){if(st.openBill)ackEv(st.openBill.id,table);return}
+  addEvent({type:"pay",table,method,subtotal:st.subtotal,tip:0,total:st.subtotal,by:"staff"});if(st.openBill)ackEv(st.openBill.id,table)}
+function freeTable(n){addEvent({type:"reset",table:n,by:"staff"});selTable=null;render()}
+function resetAll(){if(!confirmReset){confirmReset=true;render();setTimeout(()=>{confirmReset=false;if(R.v==="staff")render()},3000);return}confirmReset=false;addEvent({type:"resetAll",table:0,by:"staff"});selTable=null;render()}
+
+/* ---------- QR ---------- */
+function renderQR(){
+  document.title="Fiamma · Coduri QR";
+  $("#app").innerHTML=`<div class="admin">
+    <div class="row" style="flex-wrap:wrap"><div class="brand"><div class="brand-mark">F</div><div><div class="brand-name">Coduri QR pentru mese</div><div class="brand-sub">Gata de printat pe suporturi de masă</div></div></div>
+    <div class="s-actions"><button class="btn btn-ghost" onclick="go('ospatar')">Ecran ospătar</button><button class="btn btn-ghost" onclick="go('')">Acasă</button></div></div>
+    <div class="card" style="margin-top:24px"><b>Linkul de bază al aplicației</b><div class="small" style="margin:4px 0 10px">Fiecare cod duce la <code>linkul de bază + #masa-N</code>. La lansarea pe domeniul tău schimbi doar linkul de aici.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><input class="txt" id="baseIn" style="flex:1;min-width:240px" value="${esc(baseUrl().startsWith("http")?baseUrl():location.href.split("#")[0])}"><button class="btn btn-dark" onclick="saveBase()">Actualizează codurile</button></div></div>
+    <div class="qr-grid">${[...Array(TABLES)].map((_,i)=>`<div class="tent"><div class="tl">Fiamma · Masa</div><div class="tn">${i+1}</div><div class="qr" id="qr${i+1}"></div><div style="font-weight:600;font-size:14px">Scanează · comandă · plătește</div><div class="small">Meniu, ospătar și nota din telefon</div><a class="small" href="#masa-${i+1}" style="display:inline-block;margin-top:8px;color:var(--tomato)">Deschide masa ${i+1} →</a></div>`).join("")}</div>
+  </div>`;
+  for(let i=1;i<=TABLES;i++) qrInto($("#qr"+i),tableUrl(i),150);
+}
+function saveBase(){const v=$("#baseIn").value.trim();try{localStorage.setItem(LS_BASE,v)}catch(_){}renderQR()}
+
+render();
+</script>
+</body>
+</html>
