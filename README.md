@@ -2,7 +2,7 @@
 
 Demo pentru restaurante: fiecare masă are propriul cod QR. Clientul scanează codul, vede meniul, comandă din telefon, cheamă ospătarul cu un buton și plătește nota cu Apple Pay, Google Pay sau card, cu bacșiș, fără să aștepte.
 
-**Demo live:** https://claude.ai/artifact/9qspGUkqiiys7yG4ncHJvp
+**Demo live:** https://meniu.webwaymedia.com or meniuv2.webwaymedia.com
 
 > Plățile sunt simulate. Ilustrațiile cu pizza sunt desene SVG și țin locul fotografiilor de produs.
 
