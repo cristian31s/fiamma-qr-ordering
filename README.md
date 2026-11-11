@@ -18,9 +18,9 @@ Demo pentru restaurante: fiecare masă are propriul cod QR. Clientul scanează c
 
 - Totul se află într-un singur fișier: `index.html` (HTML, CSS și JavaScript simplu, fără build).
 - Starea este un jurnal de evenimente (`order`, `call`, `billReq`, `pay` etc.), combinat după id. Așa nu apar conflicte când două ecrane scriu în același timp.
-- Sincronizarea în demo:
-  - prin `BroadcastChannel` între tab-urile aceluiași browser;
-  - prin capabilitatea „room” a artefactului Claude între dispozitive.
+- Sincronizarea între dispozitive se face prin **Supabase**: tabelul `events` plus Realtime. Comenzile se salvează pe server, nu în browser, și apar instant pe ecranul ospătarului, de pe orice telefon.
+- Cheia din cod e cheia *publishable* a proiectului, publică prin design. Tabelul are RLS: oricine poate adăuga și citi evenimente, dar nimeni nu poate modifica sau șterge.
+- Când nu există conexiune la Supabase (de exemplu fișierul deschis local), aplicația revine la sincronizarea între tab-urile aceluiași browser.
 - Codurile QR folosesc `qrcodejs` de pe cdnjs.
 
 ## Rulare locală
@@ -29,7 +29,7 @@ Deschide `index.html` în browser, de exemplu cu `npx serve .`. Pune `#ospatar` 
 
 ## Pași spre producție
 
-- [ ] Backend real (Supabase Realtime sau Firebase) în locul sincronizării demo
+- [x] Backend real: Supabase Realtime
 - [ ] Cod de masă nepredictibil și confirmarea mesei de către ospătar, ca să nu se poată comanda de acasă
 - [ ] Plăți reale prin Stripe (Apple Pay și Google Pay prin Payment Request), cu firmă și cont verificat
 - [ ] Bon fiscal: integrare cu casa de marcat sau cu programul de gestiune al restaurantului (de verificat cu un contabil)
