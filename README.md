@@ -41,4 +41,4 @@ Deschide `index.html` în browser, de exemplu cu `npx serve .`. Pune `#ospatar` 
 - [ ] Plăți reale prin Stripe (Apple Pay și Google Pay prin Payment Request), cu firmă și cont verificat
 - [ ] Bon fiscal: integrare cu casa de marcat sau cu programul de gestiune al restaurantului (de verificat cu un contabil)
 - [ ] Nota împărțită, meniu editabil din panou de administrare, fotografii reale de produs
-- [ ] Hosting pe Cloudflare Pages (ex. `meniu.webwaymedia.com`)
+- [x] Hosting pe Cloudflare Pages (ex. `meniu.webwaymedia.com`)
